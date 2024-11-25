@@ -112,9 +112,9 @@ local hooks = require("r.hooks")
 ---@field config_tmux? boolean
 ---
 ---Control the program to use when viewing CSV files; defaults to `""`, i.e.
----to open these in a normal Neovim buffer. See |csv_app| or `:help csv_app`
+---to open these in a normal Neovim buffer. See |view_df| or `:help view_df`
 ---for more information.
----@field csv_app? string
+---@field view_df? { open_app: string, how: string, csv_sep: string, n_lines: integer, save_fun: string, open_fun: string }
 ---
 ---A table of R.nvim commands to disable. Defaults to `{ "" }`.
 ---See |disable_cmds| or `:help disable_cmds` for more information.
@@ -432,7 +432,6 @@ local config = {
         max_time = 100,
     },
     config_tmux         = true,
-    csv_app             = "",
     disable_cmds        = { "" },
     editing_mode        = "",
     esc_term            = true,
@@ -504,6 +503,14 @@ local config = {
     tmpdir              = "",
     user_login          = "",
     user_maps_only      = false,
+    view_df = {
+        open_app = "",  -- How to open the CSV in Neovim or an external application.
+        how = "tabnew", -- How to display the data within Neovim if not using an external application.
+        csv_sep = "",   -- Field separator to be used when saving the CSV.
+        n_lines = -1,   -- Number of lines to save in the CSV (0 for all lines).
+        save_fun = "",  -- Save the data.frame in a CSV file
+        open_fun = "",  -- Use an R function to open the data.frame directly (no conversion to CSV needed)
+    },
     wait                = 60,
 }
 
@@ -581,7 +588,6 @@ local apply_user_opts = function()
     local valid_types = {
         external_term    = { "boolean", "string" },
         rmdchunk         = { "number", "string" },
-        csv_app          = { "string", "function" },
     }
 
     -- If an option is an enum, you can define the possible values here:

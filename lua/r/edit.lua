@@ -257,64 +257,65 @@ end
 
 --- Displays the contents of a data.frame or matrix sent by nvimcom.
 ---@param oname string The name of the data.frame or matrix.
----@param howto string How to display.
 ---@param txt string The concatenated lines to be displayed.
-M.view_df = function(oname, howto, txt)
-    local csv_lines = vim.split(string.gsub(txt, "\019", "'"), "\020")
-    local tsvnm = config.tmpdir .. "/" .. oname .. ".tsv"
+M.view_df = function(oname, txt)
+    local csv_lines
+    if txt == "" then
+        csv_lines = vim.fn.readfile(oname .. ".csv")
+    else
+        csv_lines = vim.split(string.gsub(txt, "\019", "'"), "\020")
+    end
 
+    local how = config.view_df.how or "tabnew"
+    local open_app = config.view_df.open_app or ""
+
+    if open_app == "" then
+        if vim.fn.bufloaded(oname) == 1 then
+            local sbopt = vim.o.switchbuf
+            vim.o.switchbuf = "useopen,usetab"
+            vim.cmd.sb(oname)
+            vim.o.switchbuf = sbopt
+        else
+            vim.api.nvim_cmd({ cmd = how, args = { oname } }, {})
+        end
+        vim.api.nvim_set_option_value("modifiable", true, { scope = "local" })
+        vim.api.nvim_buf_set_lines(0, 0, -1, true, csv_lines)
+        vim.api.nvim_set_option_value("modifiable", false, { scope = "local" })
+        vim.api.nvim_set_option_value("buftype", "nofile", { scope = "local" })
+        vim.api.nvim_set_option_value("filetype", "csv", { scope = "local" })
+        return
+    end
+
+    local tsvnm = config.tmpdir .. "/" .. oname .. ".tsv"
     vim.fn.writefile(csv_lines, tsvnm)
     M.add_for_deletion(tsvnm)
 
-    if type(config.csv_app) == "function" then
-        config.csv_app(tsvnm, txt)
+    if type(open_app) == "function" then
+        open_app(tsvnm, txt)
         return
     end
 
-    if config.csv_app ~= "" then
-        local cmd
-        if config.csv_app:find("%%s") then
-            cmd = string.format(config.csv_app, tsvnm)
-        else
-            cmd = config.csv_app .. " " .. tsvnm
-        end
-
-        if config.csv_app:find("^terminal:") then
-            cmd = string.gsub(cmd, "^terminal:", "")
-            vim.cmd("tabnew | terminal " .. cmd)
-            vim.cmd("startinsert")
-            return
-        end
-
-        if config.csv_app:find("^:") then
-            vim.cmd(cmd)
-            return
-        end
-
-        local appcmd = vim.fn.split(cmd)
-        require("r.job").start("CSV app", appcmd, { detach = true })
-        return
-    end
-
-    if vim.fn.bufloaded(oname) == 1 then
-        local sbopt = vim.o.switchbuf
-        vim.o.switchbuf = "useopen,usetab"
-        vim.cmd.sb(oname)
-        vim.o.switchbuf = sbopt
+    local cmd
+    if open_app:find("%%s") then
+        cmd = string.format(open_app, tsvnm)
     else
-        if howto == "head" then
-            -- head() of data.frame
-            vim.cmd("above")
-            vim.cmd("7split " .. oname)
-        else
-            vim.api.nvim_cmd({ cmd = howto, args = { oname } }, {})
-        end
+        cmd = open_app .. " " .. tsvnm
     end
-    vim.api.nvim_set_option_value("modifiable", true, { scope = "local" })
-    vim.api.nvim_buf_set_lines(0, 0, -1, true, csv_lines)
-    vim.api.nvim_set_option_value("modifiable", false, { scope = "local" })
-    vim.api.nvim_set_option_value("buftype", "nofile", { scope = "local" })
-    vim.api.nvim_set_option_value("filetype", "csv", { scope = "local" })
+
+    if open_app:find("^terminal:") then
+        cmd = string.gsub(cmd, "^terminal:", "")
+        vim.cmd(how .. " | terminal " .. cmd)
+        vim.cmd("startinsert")
+        return
+    end
+
+    if open_app:find("^:") then
+        vim.cmd(cmd)
+        return
+    end
+
+    local appcmd = vim.fn.split(cmd)
+    require("r.job").start("CSV app", appcmd, { detach = true })
 end
 
 --- Called by nvimcom. Displays the "Examples" section of R documentation.

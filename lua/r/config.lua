@@ -114,7 +114,7 @@ local hooks = require("r.hooks")
 ---Control the program to use when viewing CSV files; defaults to `""`, i.e.
 ---to open these in a normal Neovim buffer. See |view_df| or `:help view_df`
 ---for more information.
----@field view_df? { open_app: string, how: string, csv_sep: string, n_lines: integer, save_fun: string, open_fun: string }
+---@field view_df? { open_app: string, how: string, csv_sep: string, n_lines: integer, save_fun: string, open_fun: string | function }
 ---
 ---A table of R.nvim commands to disable. Defaults to `{ "" }`.
 ---See |disable_cmds| or `:help disable_cmds` for more information.
@@ -636,13 +636,15 @@ local apply_user_opts = function()
         -----------------------------------------------------------------------
         local expected_types = valid_types[key_name] or { type(default_val) }
         if vim.fn.index(expected_types, type(user_opt)) == -1 then
-            swarn(
-                ("Invalid option type for `%s`. Type should be %s, not %s."):format(
-                    key_name,
-                    utils.msg_join(expected_types, ", ", ", or ", ""),
-                    type(user_opt)
+            if key_name == "view_df.open_app" and type(user_opt) ~= "function" then
+                swarn(
+                    ("Invalid option type for `%s`. Type should be %s, not %s."):format(
+                        key_name,
+                        utils.msg_join(expected_types, ", ", ", or ", ""),
+                        type(user_opt)
+                    )
                 )
-            )
+            end
             return
         end
 

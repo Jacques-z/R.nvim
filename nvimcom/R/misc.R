@@ -115,8 +115,9 @@ nvim_viewobj <- function(oname, fenc = "", nrows = -1, R_df_viewer = NULL, save_
             txt <- paste0(txt, collapse = "\x14")
             txt <- gsub("'", "\x13", txt)
         } else {
-            save_fun(o, paste0(oname, ".csv"))
-            txt <- ""
+            txt <- save_fun(o, oname)
+            if (is.null(txt))
+                txt <- oname
         }
         .C("nvimcom_msg_to_nvim",
            paste0("lua require('r.edit').view_df('", oname, "', '", txt, "')"),

@@ -260,8 +260,12 @@ end
 ---@param txt string The concatenated lines to be displayed.
 M.view_df = function(oname, txt)
     local csv_lines
-    if txt == "" then
-        csv_lines = vim.fn.readfile(oname .. ".csv")
+    if config.view_df.save_fun and config.view_df.save_fun ~= "" then
+        if vim.fn.filereadable(txt) == 1 then
+            csv_lines = vim.fn.readfile(txt)
+        else
+            warn('File "' .. txt .. '" not found.')
+        end
     else
         csv_lines = vim.split(string.gsub(txt, "\019", "'"), "\020")
     end
@@ -286,12 +290,17 @@ M.view_df = function(oname, txt)
         return
     end
 
-    local tsvnm = config.tmpdir .. "/" .. oname .. ".tsv"
-    vim.fn.writefile(csv_lines, tsvnm)
+    local tsvnm
+    if config.view_df.save_fun and config.view_df.save_fun ~= "" then
+        tsvnm = txt
+    else
+        tsvnm = config.tmpdir .. "/" .. oname .. ".tsv"
+        vim.fn.writefile(csv_lines, tsvnm)
+    end
     M.add_for_deletion(tsvnm)
 
     if type(open_app) == "function" then
-        open_app(tsvnm, txt)
+        open_app(tsvnm)
         return
     end
 

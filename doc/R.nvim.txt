@@ -88,7 +88,7 @@ Main dependencies:
    nvim-treesitter:
       https://github.com/nvim-treesitter/nvim-treesitter
       You have to enable highlighting by tree-sitter and install parsers for
-      `r`, `markdown`, `markdown_inline`, `rnoweb`, and `yaml`.
+      `r`, `markdown`, `markdown_inline`, `rnoweb`, `yaml`, and `csv`.
 
    cmp-r (for auto-completion):
       https://github.com/R-nvim/cmp-r
@@ -1920,15 +1920,36 @@ integer number to set a fixed maximum.
 If are not running R remotely and want the CSV file written more quickly, you
 can define the function to save the CSV. In this case, the data will be saved
 in a file instead of streamed. The function must receive the `data.frame` as
-the first argument and the file name as the second argument. For example, if
-you have the `data.table` library installed and put in your `~/.Rprofile`
-`options(datatable.fwrite.sep = "\t")`, you could use the function `fwrite`:
+the first argument and the file name as the second argument and should return
+the name of the saved file. If the function returns `NULL`, R.nvim will pass
+the name of the object as it were the file name. Examples:
+
+If you have the `data.table` library installed, put in your `~/.Rprofile`:
+>r
+   options(datatable.fwrite.sep = "\t")
+
+Then, you could use the function `fwrite`:
 >lua
    save_fun = "data.table::fwrite"
 
+Use `fwrite()` without setting any option in the `~/.Rprofile`:
+>lua
+   view_df = {
+     n_lines = 0,
+     save_fun = "function(obj, obj_name) {f <- paste0(obj_name, '.tsv'); data.table::fwrite(obj, f, sep = '\t') ; f}",
+   }
+
+Use `arrow` to save a parquet file, and VisiData to open it:
+>lua
+   view_df = {
+     n_lines = 0,
+     save_fun = "function(obj, obj_name) {f <- paste0(obj_name, '.parquet'); arrow::write_parquet(obj, f) ; f}",
+     open_app = "terminal:vd"
+   }
+<
 Finally, instead of either streaming or saving the `data.frame`, there is also
-an option to configure R.nvim to run an R command to display the data.
-Examples:
+an option to configure R.nvim to send a command to the R Console to display
+the data. Examples:
 >lua
    open_fun = "tibble::tibble"
    open_fun = "relimp::showData(%s, font = 'Courier 14')"

@@ -362,9 +362,9 @@ values separated by tab characters and display this file. The command
 <LocalLeader>vh will show the `head()` of the data.frame or matrix in a
 horizontal split that opens above the current window. This behavior can be
 customized, and you can configure R.nvim to call an external application to
-display the data.frame or matrix (see |R.nvim-df-view|). All files involved in
-these operations are created in R.nvim's temporary directory and deleted when
-R quits.
+display the data.frame or matrix (see |view_df|). All files involved in these
+operations are created in R.nvim's temporary directory and deleted when R
+quits.
 
 You can source all .R files in a directory with the Normal mode command
 `:RSourceDir`, which accepts an optional argument (the directory to be
@@ -756,7 +756,7 @@ command:
 |tmpdir|              Where temporary files are created
 |compldir|            Where lists for auto completion are stored
 |remote_compldir|     Mount point of remote cache directory
-|R.nvim-df-view|      Options for visualizing a data.frame or matrix
+|view_df|             Options for visualizing a data.frame or matrix
 |R.nvim-SyncTeX|      Options for SyncTeX
 
 
@@ -1842,7 +1842,7 @@ See https://github.com/R-nvim/R.nvim/wiki/Remote-access
 
 
 ------------------------------------------------------------------------------
-6.33. View a data.frame or matrix                             *R.nvim-df-view*
+6.33. View a data.frame or matrix                                    *view_df*
 
 
 You can see data.frames and matrices in external applications with
